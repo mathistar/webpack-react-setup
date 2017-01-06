@@ -2,20 +2,15 @@ import path from 'path';
 import webpack from 'webpack';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import WebpackMd5Hash from 'webpack-md5-hash';
-// import ExtractTextPlugin from 'extract-text-webpack-plugin';
+import ExtractTextPlugin from 'extract-text-webpack-plugin';
 
 export default {
   debug: true,
-  devtool: 'cheap-module-eval-source-map',
+  devtool: 'source-map',
   noInfo: false,
   entry: {
-    vendor: [
-      "react-hot-loader/patch",
-      'eventsource-polyfill', // necessary for hot reloading with IE
-      "webpack-dev-server/client?http://localhost:3000",
-      "webpack/hot/only-dev-server",
-      path.resolve(__dirname, 'src/vendor')],
-    main: [path.resolve(__dirname, 'src/index-dev')]
+    vendor: [ path.resolve(__dirname, 'src/vendor')],
+    main: [path.resolve(__dirname, 'src/index')]
   },
 
   resolve: {
@@ -30,7 +25,7 @@ export default {
     filename: 'js/[name]-[hash].min.js'
   },
   devServer: {
-    contentBase: path.resolve(__dirname, 'src')
+    contentBase: path.resolve(__dirname, 'dist')
   },
   plugins: [
     new webpack.ProvidePlugin({
@@ -41,12 +36,12 @@ export default {
 
     new webpack.DefinePlugin({
       'process.env': {
-        'NODE_ENV': JSON.stringify('development')
+        'NODE_ENV': JSON.stringify('production')
       }
     }),
 
     // Generate an external css file with a hash in the filename
-    // new ExtractTextPlugin('[name].[contenthash].css'),
+    new ExtractTextPlugin('css/[name].[contenthash].css'),
     // Hash the files using MD5 so that their names change when the content changes.
     new WebpackMd5Hash(),
     // Use CommonsChunkPlugin to create a separate bundle
@@ -58,17 +53,19 @@ export default {
       template: 'src/index.html',
       inject: true
     }),
-    new webpack.HotModuleReplacementPlugin(),
-    new webpack.NoErrorsPlugin()
+    // Eliminate duplicate packages when generating bundle
+    new webpack.optimize.DedupePlugin(),
+
+    // Minify JS
+    new webpack.optimize.UglifyJsPlugin()
   ],
   module: {
     loaders: [
       {
         test: /\.jsx?$/, include: path.join(__dirname, 'src'),
-        loaders: ['react-hot-loader/webpack', 'babel']
+        loaders: ['babel']
       },
-      // {test: /(\.css)$/, loader: ExtractTextPlugin.extract('css?sourceMap')},
-      {test: /(\.css)$/, loader: 'style!css?sourceMap'},
+      {test: /(\.css)$/, loader: ExtractTextPlugin.extract('css?sourceMap')},
       {test: /\.eot(\?v=\d+\.\d+\.\d+)?$/, loader: "url?limit=10000&name=fonts/[name].[ext]"},
       {test: /\.(woff|woff2)$/, loader: "url?limit=10000&name=fonts/[name].[ext]"},
       {test: /\.ttf(\?v=\d+\.\d+\.\d+)?$/, loader: "url?limit=10000&mimetype=application/octet-stream&name=fonts/[name].[ext]"},

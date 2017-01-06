@@ -5,7 +5,7 @@ export default class App extends React.Component {
         return (
             <div>
                 <h1>Hello world!</h1>
-                <div>Welcome to hot-reloading React in TypeScript!</div>
+                <div>Welcome to hot-reloading React in ES6 super!</div>
             </div>
         );
     }
