@@ -1,12 +1,13 @@
 import * as React from "react";
+import DataGrid from "./components/DataGrid";
 
 export default class App extends React.Component<any, any> {
-    render() {
-        return (
-            <div>
-                <h1>Hello world!</h1>
-                <div>Welcome to hot-reloading React in Tyepscript super!</div>
-            </div>
-        );
-    }
+
+  render() {
+    return (
+      <DataGrid/>
+    );
+  }
 }
+
+

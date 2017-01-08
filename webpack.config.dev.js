@@ -10,12 +10,11 @@ export default {
   noInfo: false,
   entry: {
     vendor: [
-      "react-hot-loader/patch",
       'eventsource-polyfill', // necessary for hot reloading with IE
       "webpack-dev-server/client?http://localhost:3000",
       "webpack/hot/only-dev-server",
       path.resolve(__dirname, 'src/vendor')],
-    main: [path.resolve(__dirname, 'src/index-dev.tsx')]
+    main: [path.resolve(__dirname, 'src/index.tsx')]
   },
 
   resolve: {
@@ -29,8 +28,8 @@ export default {
     publicPath: '/',
     filename: 'js/[name]-[hash].min.js'
   },
-  devServer: {
-    contentBase: path.resolve(__dirname, 'src')
+  devserver: {
+
   },
   plugins: [
     new webpack.ProvidePlugin({
@@ -62,15 +61,23 @@ export default {
     new webpack.NoErrorsPlugin()
   ],
   module: {
+   /* preLoaders: [
+      {
+        test: /\.tsx?$/,
+        loader: 'tslint',
+        exclude: /node_modules/
+      }
+    ],*/
     loaders: [
       {
-        test: /\.jsx?$/, include: path.join(__dirname, 'src'),
-        loaders: ['react-hot-loader/webpack', 'babel']
+        test: /\.jsx?$/,
+        include: path.join(__dirname, 'src'),
+        loaders: ['react-hot', 'babel']
       },
       {
         test: /\.tsx?$/,
         loaders: [
-          "react-hot-loader/webpack",
+          "react-hot",
           "awesome-typescript-loader"
         ],
         exclude: path.resolve(__dirname, 'node_modules'),
@@ -80,8 +87,17 @@ export default {
       {test: /(\.css)$/, loader: 'style!css'},
       {test: /\.eot(\?v=\d+\.\d+\.\d+)?$/, loader: "url?limit=10000&name=fonts/[name].[ext]"},
       {test: /\.(woff|woff2)$/, loader: "url?limit=10000&name=fonts/[name].[ext]"},
-      {test: /\.ttf(\?v=\d+\.\d+\.\d+)?$/, loader: "url?limit=10000&mimetype=application/octet-stream&name=fonts/[name].[ext]"},
+      {
+        test: /\.ttf(\?v=\d+\.\d+\.\d+)?$/,
+        loader: "url?limit=10000&mimetype=application/octet-stream&name=fonts/[name].[ext]"
+      },
       {test: /\.svg(\?v=\d+\.\d+\.\d+)?$/, loader: "url?limit=10000&mimetype=image/svg+xml&name=fonts/[name].[ext]"}
     ]
   }
+/*  tslint: {
+    configuration: require('./tslint.json'),
+    failOnHint: true,
+    tsConfigFile: 'tsconfig.json'
+  }*/
+
 };

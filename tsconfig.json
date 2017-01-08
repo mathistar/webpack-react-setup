@@ -6,11 +6,10 @@
         "module": "commonjs",
         "target": "es5",
         "jsx": "react"
+//        "types" : ["react-hot-loader","node","lodash","react", "react-dom", "whatwg-fetch", "es6-promise"]
     },
-    "files": [
-        "./declarations.d.ts",
-        "./src/*.tsx",
-        "./src/*.ts"
+    "include": [
+        "src/**/*"
     ],
     "exclude": [
         "node_modules"
