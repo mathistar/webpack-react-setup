@@ -38,7 +38,7 @@ interface IPagination {
   current: number
   length: number
   end?: number
-  onPageChange?: Function
+  onPageChange?: any
 }
 
 interface IHeaderProps {
@@ -94,19 +94,19 @@ const Pagination: React.StatelessComponent<IPagination> = paging => {
     <div className="row">
       <div className="col-md-3 col-md-offset-9 textAlignRight">
         <ul className="pagination lessMarginTopBottom">
-          <li className={start==1?'disabled':''} onClick={paging.onPageChange(paging.current - 1)}>
+          <li className={start==1?'disabled':''} onClick={paging.onPageChange}>
             <a href="#" aria-label="Previous">
               <span aria-hidden="true">{String.fromCharCode(171)}</span>
             </a>
           </li>
           {
             pageDisplayArray.map((value, key) => (
-              <li key={key} className={pageFunctionArray[key]} onClick={paging.onPageChange(value)}>
+              <li key={key} className={pageFunctionArray[key]} onClick={paging.onPageChange}>
                 <a href="#">{value}</a>
               </li>
             ))
           }
-          <li className={paging.end - start < paging.length ?'disabled':''} onClick={paging.onPageChange(paging.current + 1)}>
+          <li className={paging.end - start < paging.length ?'disabled':''} onClick={paging.onPageChange}>
               <a href="#" aria-label="Next">
                 <span aria-hidden="true">{String.fromCharCode(187)}</span>
               </a>
@@ -139,9 +139,11 @@ export default class DataGrid extends React.Component<any, IDataState> {
     return fullData.slice(start, end)
   }
 
-  onPageChange(pageNo: number) {
+  onPageChange(event: React.ReactHTMLElement<HTMLAnchorElement>):void {
     const pageCriteria: IPageCriteria = clone(this.state.pageCriteria);
-    pageCriteria.page = pageNo
+    console.log(`event value is ${event}`)
+
+    // pageCriteria.page = pageNo
     // this.setState({pageCriteria})
   }
 
@@ -170,7 +172,11 @@ export default class DataGrid extends React.Component<any, IDataState> {
         <div className="container">
           <h1>CRS Search</h1>
           <DataTables header={this.state.header} data={this.state.data}/>
-          <Pagination current={this.state.pageCriteria.page} length={3} end={this.state.pageCriteria.totalPage} onPageChange={this.onPageChange}/>
+          <Pagination
+            current={this.state.pageCriteria.page}
+            length={3}
+            end={this.state.pageCriteria.totalPage}
+            onPageChange={ this.onPageChange }/>
         </div>
       </div>
     );
