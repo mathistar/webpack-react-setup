@@ -2,3 +2,16 @@ h1 {
   font-size: larger;
   background-color: lightblue;
 }
+
+
+.lessMarginBottom {
+  margin-bottom: 5px;
+}
+
+.lessMarginTopBottom {
+  margin: 5px 0;
+}
+
+.textAlignRight {
+  text-align: right;
+}
