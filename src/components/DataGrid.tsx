@@ -1,48 +1,36 @@
 import * as React from "react";
-import RemoteApi from '../api/RemoteApi'
+import remoteApi from '../api/RemoteApi'
 import {RemoteConstant} from "../api/RemoteConstant";
 import ReactNode = React.ReactNode;
-
-interface ICRSData {
-  accountNo: number
-  accountName: string
-  partyId: number
-  partyName: string
-  dateUpdated: string
-  isTaxResidence: boolean
-  countryResidence: string
-}
-
-interface ICRSHeader {
-  heading: Array<string>
-  type?: string
-}
+import Function1 = _.Function1;
 
 interface IDataState {
-  header?: Array<string>,
-  data?: Array<Array<string>>
+  header?: Array<String>,
+  data?: Array<Array<String>>
   pageCriteria?: IPageCriteria
+  fullData?: Array<Array<String>>
 }
 
 
 interface IPageCriteria {
-  page?: number
-  size?: number
-  sortColumn?: string
-  sortOrder?: string
-  filter?: string
-  totalPage?: number
+  page?: Number
+  size?: Number
+  sortColumn?: String
+  sortOrder?: String
+  filter?: String
+  totalPage?: Number
 }
 
 interface IPagination {
-  current: number
-  length: number
-  end?: number
+  current: Number
+  length: Number
+  end?: Number
   onPageChange?: any
 }
 
-interface IHeaderProps {
-  header: Array<string>
+interface ISearch {
+  text: String
+  onTextChange: any
 }
 
 const Header: React.StatelessComponent<IDataState> = (heading) => (
@@ -68,7 +56,8 @@ const Details: React.StatelessComponent<IDataState> = (details) => (
 const DataTables: React.StatelessComponent<IDataState> = (details) => (
   <div className="row">
     <div className="col-md-12">
-      <table className="table table-responsive table-striped table-bordered lessMarginBottom">
+      <table
+        className="table table-responsive table-striped table-bordered table-condensed table-hover lessMarginBottom">
         <Header header={details.header}/>
         <Details data={details.data}/>
       </table>
@@ -77,39 +66,65 @@ const DataTables: React.StatelessComponent<IDataState> = (details) => (
   </div>
 )
 
-const Pagination: React.StatelessComponent<IPagination> = paging => {
-  let pageDisplayArray: Array<string> = []
-  let pageFunctionArray: Array<string> = []
-  console.log(paging)
-  let start = paging.current - Math.floor(paging.length / 2)
-  start = start < 1 ? 1 : start
+const Search: React.StatelessComponent<ISearch> = (search) => (
+  <div className="row addMarginTop">
+    <div className="col-md-4">
+      <h1 className="lessMarginTopBottom">CRS Search</h1>
+    </div>
+    <div className="textAlignRight col-md-8 lessMarginTopBottom">
+      <input type="text" className="form-control input-lg" placeholder=" Search for Account / Party / Country ..."
+             value={search.text.toString()}
+             onChange={(e) => search.onTextChange(e.currentTarget.value)}/>
 
-  for (let i = start; i <= paging.length; i++) {
-    (paging.current == i) ? pageFunctionArray.push("active") :
-      ( paging.end < i ? pageFunctionArray.push("disabled") : pageFunctionArray.push("") )
-    pageDisplayArray.push(String(i))
+    </div>
+  </div>
+)
+
+const PagingLabel: React.StatelessComponent<IPagination> = (page) => (
+  <span className="label">Page {page.current} of {page.end}</span>
+)
+
+
+const Pagination: React.StatelessComponent<IPagination> = paging => {
+  let pageDisplayArray: Array<String> = []
+  let pageFunctionArray: Array<String> = []
+  const midPage = Math.floor(paging.length.valueOf() / 2)
+  let start = paging.current.valueOf() - midPage
+  const diffEnd = paging.end.valueOf() - paging.current.valueOf()
+  start = start < 1 ? 1 : start + (diffEnd <= midPage ? diffEnd - 1 : 0 )
+
+  for (let i = 0; i < paging.length; i++) {
+    (paging.current == i + start) ? pageFunctionArray.push("active") :
+      ( paging.end < i + start ? pageFunctionArray.push("disabled") : pageFunctionArray.push("") )
+    pageDisplayArray.push(String(i + start))
   }
 
   return (
     <div className="row">
-      <div className="col-md-3 col-md-offset-9 textAlignRight">
+      <div className="col-md-2 col-sm-2 col-xs-2">
+        <PagingLabel current={paging.current} end={paging.end} length={paging.length}/>
+      </div>
+      <div className="col-md-4 col-md-offset-6 col-sm-6 col-sm-offset-4 col-xs-8 col-xs-offset-2 textAlignRight">
         <ul className="pagination lessMarginTopBottom">
-          <li className={start==1?'disabled':''} onClick={paging.onPageChange}>
+          <li className={paging.current==1?'disabled':''}
+              onClick={() => paging.onPageChange(paging.current.valueOf() - Number(1))}>
             <a href="#" aria-label="Previous">
               <span aria-hidden="true">{String.fromCharCode(171)}</span>
             </a>
           </li>
           {
             pageDisplayArray.map((value, key) => (
-              <li key={key} className={pageFunctionArray[key]} onClick={paging.onPageChange}>
+              <li key={key} className={pageFunctionArray[key].valueOf()}
+                  onClick={() => {paging.onPageChange(value)}}>
                 <a href="#">{value}</a>
               </li>
             ))
           }
-          <li className={paging.end - start < paging.length ?'disabled':''} onClick={paging.onPageChange}>
-              <a href="#" aria-label="Next">
-                <span aria-hidden="true">{String.fromCharCode(187)}</span>
-              </a>
+          <li className={paging.current == paging.end ?'disabled':''}
+              onClick={() => paging.onPageChange(paging.current.valueOf()+1)}>
+            <a href="#" aria-label="Next">
+              <span aria-hidden="true">{String.fromCharCode(187)}</span>
+            </a>
           </li>
         </ul>
       </div>
@@ -117,66 +132,104 @@ const Pagination: React.StatelessComponent<IPagination> = paging => {
   )
 }
 
-function  clone (object:any) {
-  return JSON.parse(JSON.stringify(object))
-}
 
 export default class DataGrid extends React.Component<any, IDataState> {
 
   constructor(props: any) {
     super(props)
-    const pageCriteria: IPageCriteria = {page: 0, size: 10}
-    this.state = {header: [], data: [], pageCriteria: pageCriteria}
-    this.onPageChange = this.onPageChange.bind(this)
+    const pageCriteria: IPageCriteria = {page: 0, size: 10, totalPage: 0, filter: ''}
+    this.state = {header: [], data: [], pageCriteria: pageCriteria, fullData:[]}
+
   }
 
+  applyFilterCriteria(pageCriteria: IPageCriteria, fullData: Array<Array<String>>): Array<Array<String>> {
+    const filter = pageCriteria.filter.trim().toString();
+    let returnData = fullData;
+    if (filter.length > 0) {
+      returnData = fullData.filter(
+        (values, i) => values.filter(
+          (data: string) => {
+            let columnData = data + ""
+            return columnData.indexOf(filter) >= 0
+          }
+        ).length > 0
+      )
+    }
+    return returnData;
+  }
 
-
-  applyPagingCriteria(pageCriteria: IPageCriteria, fullData: Array<Array<string>>): Array<Array<string>> {
-    let end = pageCriteria.page * pageCriteria.size
-    let start = end - pageCriteria.size
-    console.log(`page from ${start} to ${end}`)
+  applyPagingCriteria(pageCriteria: IPageCriteria, fullData: Array<Array<String>>): Array<Array<String>> {
+    let end = pageCriteria.page.valueOf() * pageCriteria.size.valueOf()
+    let start = end - pageCriteria.size.valueOf()
     return fullData.slice(start, end)
   }
 
-  onPageChange(event: React.ReactHTMLElement<HTMLAnchorElement>):void {
-    const pageCriteria: IPageCriteria = clone(this.state.pageCriteria);
-    console.log(`event value is ${event}`)
+  onPageChange(pageNo: Number) {
+    const pageCriteria: IPageCriteria = this.state.pageCriteria
+    if (pageNo >= 1 && pageNo <= pageCriteria.totalPage && pageNo != pageCriteria.page) {
+      this.getData({page: Number(pageNo)})
+    }
+  }
 
-    // pageCriteria.page = pageNo
-    // this.setState({pageCriteria})
+  onSearchTextChange(text: String) {
+    const pageCriteria: IPageCriteria = this.state.pageCriteria
+    if (text != pageCriteria.filter) {
+      this.getData({filter: text, page: Number(1)})
+    }
+  }
+
+  getHeader() {
+    remoteApi.getData(RemoteConstant.CRSHeader).then(
+      res => {
+        this.setState({header: res.data as Array<String>})
+      }
+    )
+  }
+
+  extractFullData(newPageCriteria: Object) {
+    remoteApi.getData(RemoteConstant.CRSData).then(
+      res => {
+        let fullData = res.data as Array<Array<String>>;
+        this.getData(newPageCriteria, fullData);
+      }
+    )
+  }
+
+  getData(newPageCriteria: Object, initialData : Array<Array<String>> = []) {
+    const pageCriteria: IPageCriteria = (Object as any).assign({},
+      this.state.pageCriteria, newPageCriteria)
+    let fullData = initialData
+    if ( initialData.length == 0) {
+      fullData = this.state.fullData
+    }
+    let filterData = this.applyFilterCriteria(pageCriteria, fullData)
+    pageCriteria.totalPage = Math.ceil(filterData.length / pageCriteria.size.valueOf())
+    const data = this.applyPagingCriteria(pageCriteria,filterData )
+    if ( initialData.length == 0 ) {
+      this.setState({data, pageCriteria})
+    } else {
+      this.setState({data, pageCriteria, fullData})
+    }
   }
 
   componentWillMount() {
-    const remoteApi = new RemoteApi();
-    remoteApi.getData(RemoteConstant.CRSHeader).then(
-      res => {
-        this.setState({header: res.data as Array<string>})
-      }
-    )
-    remoteApi.getData(RemoteConstant.CRSData).then(
-      res => {
-        const pageCriteria: IPageCriteria = clone(this.state.pageCriteria)
-        pageCriteria.page = 1
-        const fullData = res.data as Array<Array<string>>
-        pageCriteria.totalPage = Math.ceil(fullData.length / pageCriteria.size)
-        const filteredData = this.applyPagingCriteria(pageCriteria, fullData)
-        this.setState({data: filteredData, pageCriteria})
-      }
-    )
+    this.getHeader()
+    this.extractFullData({page: 1})
   }
 
   render() {
     return (
       <div>
         <div className="container">
-          <h1>CRS Search</h1>
+          <Search text={this.state.pageCriteria.filter.toString()}
+                  onTextChange={(text:String) => this.onSearchTextChange(text)}/>
           <DataTables header={this.state.header} data={this.state.data}/>
+
           <Pagination
             current={this.state.pageCriteria.page}
             length={3}
             end={this.state.pageCriteria.totalPage}
-            onPageChange={ this.onPageChange }/>
+            onPageChange={(pageNo:Number) => this.onPageChange(pageNo) }/>
         </div>
       </div>
     );
