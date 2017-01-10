@@ -85,8 +85,7 @@ export default {
       },
       // {test: /(\.css)$/, loader: ExtractTextPlugin.extract('style-loader','css-loader')},
       {test: /(\.css)$/, loader: 'style!css'},
-      {test: /\.eot(\?v=\d+\.\d+\.\d+)?$/, loader: "url?limit=10000&name=fonts/[name].[ext]"},
-      {test: /\.(woff|woff2)$/, loader: "url?limit=10000&name=fonts/[name].[ext]"},
+      {test: /\.(eot|woff2?|jpe?g|png)(\?v=\d+\.\d+\.\d+)?$/, loader: "url?limit=10000&name=fonts/[name].[ext]"},
       {
         test: /\.ttf(\?v=\d+\.\d+\.\d+)?$/,
         loader: "url?limit=10000&mimetype=application/octet-stream&name=fonts/[name].[ext]"

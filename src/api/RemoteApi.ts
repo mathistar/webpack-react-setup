@@ -5,7 +5,7 @@ import {isObject} from "util";
 
 
 
-export default class RemoteApi {
+class RemoteApi {
 
   readonly URL_PREFIX:string = "/api"
 
@@ -34,3 +34,8 @@ export default class RemoteApi {
   }
 
 }
+
+
+const remoteApi = new RemoteApi()
+
+export default remoteApi

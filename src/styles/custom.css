@@ -1,7 +1,3 @@
-h1 {
-  font-size: larger;
-  background-color: lightblue;
-}
 
 
 .lessMarginBottom {
@@ -14,4 +10,8 @@ h1 {
 
 .textAlignRight {
   text-align: right;
+}
+
+.addMarginTop {
+  margin-top: 15px;
 }

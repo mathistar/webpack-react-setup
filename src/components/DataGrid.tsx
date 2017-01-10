@@ -23,7 +23,7 @@ interface IPageCriteria {
 
 interface IPagination {
   current: Number
-  length: Number
+  length?: Number
   end?: Number
   onPageChange?: any
 }
@@ -43,13 +43,20 @@ const Header: React.StatelessComponent<IDataState> = (heading) => (
 
 const Details: React.StatelessComponent<IDataState> = (details) => (
   <tbody>
-  {details.data.map((row, i) => (
-    <tr key={i}>
-      {row.map((col, i) => (
-        <td key={i}>{col}</td>
-      ))}
-    </tr>
-  ))}
+  {
+    details.data.length == 0 ?
+      (<tr>
+        <td colSpan={details.header.length}>
+          <div className="alert alert-info text-center" role="alert">No Data Found</div>
+        </td>
+      </tr> ) : (
+        details.data.map((row, i) => (
+          <tr key={i}>
+            {row.map((col, i) => (
+              <td key={i}>{col}</td>
+            ))}
+          </tr>
+        )))}
   </tbody>
 )
 
@@ -59,7 +66,7 @@ const DataTables: React.StatelessComponent<IDataState> = (details) => (
       <table
         className="table table-responsive table-striped table-bordered table-condensed table-hover lessMarginBottom">
         <Header header={details.header}/>
-        <Details data={details.data}/>
+        <Details data={details.data} header={details.header}/>
       </table>
     </div>
 
@@ -81,54 +88,46 @@ const Search: React.StatelessComponent<ISearch> = (search) => (
 )
 
 const PagingLabel: React.StatelessComponent<IPagination> = (page) => (
-  <span className="label">Page {page.current} of {page.end}</span>
+  <h4><span className="label label-info">Page {page.end == 0 ? 0 : page.current} of {page.end}</span></h4>
 )
-
 
 const Pagination: React.StatelessComponent<IPagination> = paging => {
   let pageDisplayArray: Array<String> = []
   let pageFunctionArray: Array<String> = []
   const midPage = Math.floor(paging.length.valueOf() / 2)
   let start = paging.current.valueOf() - midPage
-  const diffEnd = paging.end.valueOf() - paging.current.valueOf()
-  start = start < 1 ? 1 : start + (diffEnd <= midPage ? diffEnd - 1 : 0 )
-
+  start = start < 1 ? 1 : start;
   for (let i = 0; i < paging.length; i++) {
     (paging.current == i + start) ? pageFunctionArray.push("active") :
-      ( paging.end < i + start ? pageFunctionArray.push("disabled") : pageFunctionArray.push("") )
+      ( i + start > paging.end ? pageFunctionArray.push("disabled") : pageFunctionArray.push("") )
     pageDisplayArray.push(String(i + start))
   }
 
   return (
-    <div className="row">
-      <div className="col-md-2 col-sm-2 col-xs-2">
-        <PagingLabel current={paging.current} end={paging.end} length={paging.length}/>
-      </div>
-      <div className="col-md-4 col-md-offset-6 col-sm-6 col-sm-offset-4 col-xs-8 col-xs-offset-2 textAlignRight">
-        <ul className="pagination lessMarginTopBottom">
-          <li className={paging.current==1?'disabled':''}
-              onClick={() => paging.onPageChange(paging.current.valueOf() - Number(1))}>
-            <a href="#" aria-label="Previous">
-              <span aria-hidden="true">{String.fromCharCode(171)}</span>
-            </a>
+
+    <ul className="pagination lessMarginTopBottom">
+      <li className={paging.current==1?'disabled':''}
+          onClick={() => paging.onPageChange(paging.current.valueOf() - Number(1))}>
+        <a href="#" aria-label="Previous">
+          <span aria-hidden="true">{String.fromCharCode(171)}</span>
+        </a>
+      </li>
+      {
+        pageDisplayArray.map((value, key) => (
+          <li key={key} className={pageFunctionArray[key].valueOf()}
+              onClick={() => {paging.onPageChange(value)}}>
+            <a href="#">{value}</a>
           </li>
-          {
-            pageDisplayArray.map((value, key) => (
-              <li key={key} className={pageFunctionArray[key].valueOf()}
-                  onClick={() => {paging.onPageChange(value)}}>
-                <a href="#">{value}</a>
-              </li>
-            ))
-          }
-          <li className={paging.current == paging.end ?'disabled':''}
-              onClick={() => paging.onPageChange(paging.current.valueOf()+1)}>
-            <a href="#" aria-label="Next">
-              <span aria-hidden="true">{String.fromCharCode(187)}</span>
-            </a>
-          </li>
-        </ul>
-      </div>
-    </div>
+        ))
+      }
+      <li className={paging.current == paging.end ?'disabled':''}
+          onClick={() => paging.onPageChange(paging.current.valueOf()+1)}>
+        <a href="#" aria-label="Next">
+          <span aria-hidden="true">{String.fromCharCode(187)}</span>
+        </a>
+      </li>
+    </ul>
+
   )
 }
 
@@ -138,8 +137,7 @@ export default class DataGrid extends React.Component<any, IDataState> {
   constructor(props: any) {
     super(props)
     const pageCriteria: IPageCriteria = {page: 0, size: 10, totalPage: 0, filter: ''}
-    this.state = {header: [], data: [], pageCriteria: pageCriteria, fullData:[]}
-
+    this.state = {header: [], data: [], pageCriteria: pageCriteria, fullData: []}
   }
 
   applyFilterCriteria(pageCriteria: IPageCriteria, fullData: Array<Array<String>>): Array<Array<String>> {
@@ -150,7 +148,7 @@ export default class DataGrid extends React.Component<any, IDataState> {
         (values, i) => values.filter(
           (data: string) => {
             let columnData = data + ""
-            return columnData.indexOf(filter) >= 0
+            return columnData.toLowerCase().indexOf(filter.toLowerCase()) >= 0
           }
         ).length > 0
       )
@@ -195,17 +193,17 @@ export default class DataGrid extends React.Component<any, IDataState> {
     )
   }
 
-  getData(newPageCriteria: Object, initialData : Array<Array<String>> = []) {
+  getData(newPageCriteria: Object, initialData: Array<Array<String>> = []) {
     const pageCriteria: IPageCriteria = (Object as any).assign({},
       this.state.pageCriteria, newPageCriteria)
     let fullData = initialData
-    if ( initialData.length == 0) {
+    if (initialData.length == 0) {
       fullData = this.state.fullData
     }
     let filterData = this.applyFilterCriteria(pageCriteria, fullData)
     pageCriteria.totalPage = Math.ceil(filterData.length / pageCriteria.size.valueOf())
-    const data = this.applyPagingCriteria(pageCriteria,filterData )
-    if ( initialData.length == 0 ) {
+    const data = this.applyPagingCriteria(pageCriteria, filterData)
+    if (initialData.length == 0) {
       this.setState({data, pageCriteria})
     } else {
       this.setState({data, pageCriteria, fullData})
@@ -224,12 +222,19 @@ export default class DataGrid extends React.Component<any, IDataState> {
           <Search text={this.state.pageCriteria.filter.toString()}
                   onTextChange={(text:String) => this.onSearchTextChange(text)}/>
           <DataTables header={this.state.header} data={this.state.data}/>
-
-          <Pagination
-            current={this.state.pageCriteria.page}
-            length={3}
-            end={this.state.pageCriteria.totalPage}
-            onPageChange={(pageNo:Number) => this.onPageChange(pageNo) }/>
+          <div className="row">
+            <div className="col-md-2 col-sm-2 col-xs-2">
+              <PagingLabel current={this.state.pageCriteria.page}
+                           end={this.state.pageCriteria.totalPage}/>
+            </div>
+            <div className="col-md-4 col-md-offset-6 col-sm-6 col-sm-offset-4 col-xs-8 col-xs-offset-2 textAlignRight">
+              <Pagination
+                current={this.state.pageCriteria.page}
+                end={this.state.pageCriteria.totalPage}
+                length={5}
+                onPageChange={(pageNo:Number) => this.onPageChange(pageNo) }/>
+            </div>
+          </div>
         </div>
       </div>
     );
